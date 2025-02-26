@@ -3,7 +3,7 @@ name: CI/CD for Static Website
 on:
   push:
     branches:
-      - main  # Triggers the workflow on every push to main
+      - master  # Triggers the workflow on every push to main
 
 jobs:
   build-and-test:
