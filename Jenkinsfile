@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/LauraOkafor/CICD-react-frontend.git' // Change this to your repo
+                git branch: 'master', url: 'https://github.com/LauraOkafor/CICD-react-frontend.git' // Change this to your repo
             }
         }
 
