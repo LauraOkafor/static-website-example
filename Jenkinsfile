@@ -8,17 +8,9 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'node -v'   // Check Node.js version
-                sh 'npm -v'    // Check npm version
-                sh 'npm install'
-            }
-        }
-
         stage('Build') {
             steps {
-                sh 'npm run build'
+                sh 'echo "No build needed for static website"'
             }
         }
 
@@ -26,7 +18,7 @@ pipeline {
             steps {
                 sshagent(['EC2_SSH_KEY']) {
                     sh '''
-                    scp -r ./dist ubuntu@your-ec2-ip:/var/www/html
+                    scp -r * ubuntu@your-ec2-ip:/var/www/html
                     ssh ubuntu@your-ec2-ip 'sudo systemctl restart nginx'
                     '''
                 }
