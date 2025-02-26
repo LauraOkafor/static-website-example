@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        SERVER_IP = 'your-ec2-ip'
+        SERVER_IP = '44.203.38.242'
         DEPLOY_PATH = '/var/www/html'
-        GIT_REPO = 'git@github.com:your-username/your-repo.git'
+        GIT_REPO = 'https://github.com/LauraOkafor/static-website-example.git'
         SSH_CRED_ID = 'your-jenkins-ssh-credential-id'
     }
 
