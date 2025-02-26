@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     checkout([$class: 'GitSCM',
-                        branches: [[name: '*/main']],
+                        branches: [[name: '*/master']],
                         userRemoteConfigs: [[
                             url: "${GIT_REPO}",
                             credentialsId: 'your-jenkins-git-credential-id'  // Update with your actual Git credential ID
