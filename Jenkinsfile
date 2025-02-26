@@ -1,37 +1,43 @@
-stage('Checkout Code') {
-    steps {
-        git branch: 'master', url: "${GIT_REPO}"
-    }
-}pipeline {
+pipeline {
     agent any
 
     environment {
         SERVER_IP = '44.203.38.242'
         DEPLOY_PATH = '/var/www/html'
-        GIT_REPO = 'git@github.com:LauraOkafor/static-website-example.git'  // Use SSH for secure authentication
-        SSH_CRED_ID = 'EC2_SSH_KEY'
+        GIT_REPO = 'https://github.com/LauraOkafor/static-website-example.git'
+        SSH_CRED_ID = 'EC2_SSH_KEY'  // Update with your actual SSH credential ID
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'master', credentialsId: SSH_CRED_ID, url: GIT_REPO
+                script {
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[
+                            url: "${GIT_REPO}",
+                            credentialsId: 'your-jenkins-git-credential-id'  // Update with your actual Git credential ID
+                        ]]
+                    ])
+                }
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                sshagent([SSH_CRED_ID]) {
-                    sh """
-                        rsync -avz --delete ./ ubuntu@${SERVER_IP}:${DEPLOY_PATH}
-                        ssh ubuntu@${SERVER_IP} 'sudo systemctl restart nginx'
-                    """
+                script {
+                    sshagent(credentials: [SSH_CRED_ID]) {
+                        sh """
+                            rsync -avz --delete . ${SERVER_IP}:${DEPLOY_PATH}
+                            ssh ${SERVER_IP} 'sudo systemctl restart nginx'
+                        """
+                    }
                 }
             }
         }
     }
 
     triggers {
-        pollSCM('H/5 * * * *')  // Check for new commits every 5 minutes
+        pollSCM('H/5 * * * *')  // Polls every 5 minutes for changes
     }
 }
