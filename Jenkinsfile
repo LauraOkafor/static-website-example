@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         SSH_KEY = credentials('EC2_SSH_KEY')  // Use your Jenkins SSH key ID
-        SERVER_IP = "44.202.145.120"    // Replace with your EC2 instance IP
+        SERVER_IP = "44.201.242.144"    // Replace with your EC2 instance IP
         SERVER_USER = "ubuntu"                // Change if needed
         DEPLOY_DIR = "/var/www/html"
         GIT_REPO = "https://github.com/LauraOkafor/static-website-example.git"
