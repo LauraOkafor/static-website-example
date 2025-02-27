@@ -2,57 +2,46 @@ pipeline {
     agent any
 
     triggers {
-        githubPush()  // This triggers Jenkins on every GitHub push
-    }
-
-    environment {
-        SSH_KEY = credentials('EC2_SSH_KEY')  // Use your Jenkins SSH key ID
-        SERVER_IP = "44.201.242.144"    // Replace with your EC2 instance IP
-        SERVER_USER = "ubuntu"                // Change if needed
-        DEPLOY_DIR = "/var/www/html"
-        GIT_REPO = "https://github.com/LauraOkafor/static-website-example.git"
+        githubPush()  // Auto-trigger pipeline on push
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'master', url: env.GIT_REPO
+                git branch: 'main', url: 'https://github.com/LauraOkafor/static-website-example.git'
             }
         }
 
-        stage('Install Nginx on EC2') {
+        stage('Archive Artifact') {
             steps {
-                script {
-                    sh """
-                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} << EOF
-                        sudo apt update -y
-                        sudo apt install -y nginx
-                        sudo systemctl enable nginx
-                        sudo systemctl start nginx
-                        EOF
-                    """
-                }
+                archiveArtifacts artifacts: '**/*', fingerprint: true
             }
         }
 
-        stage('Deploy Website') {
+        stage('Deploy') {
             steps {
-                script {
-                    sh """
-                        scp -i ${SSH_KEY} -o StrictHostKeyChecking=no -r * ${SERVER_USER}@${SERVER_IP}:${DEPLOY_DIR}
-                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "sudo systemctl restart nginx"
-                    """
+                sshagent(credentials: ['EC2_SSH_KEY']) {
+                    sh '''
+                        mkdir -p ~/.ssh
+                        ssh-keyscan -H 3.88.38.231 >> ~/.ssh/known_hosts
+                        scp -r * ubuntu@3.88.38.231:/tmp/static-site
+                        
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.88.38.231 "
+                            sudo apt update && sudo apt install -y nginx
+                            sudo systemctl start nginx
+                            sudo rm -rf /var/www/html/*
+                            sudo cp -r /tmp/static-site/* /var/www/html/
+                            sudo systemctl restart nginx
+                        "
+                    '''
                 }
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Deployment Successful! Your website is live."
-        }
-        failure {
-            echo "❌ Deployment Failed. Check Jenkins logs."
+        always {
+            cleanWs()
         }
     }
 }
