@@ -1,12 +1,16 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()  // This triggers Jenkins on every GitHub push
+    }
+
     environment {
-        SSH_KEY = credentials('EC2_SSH_KEY')  // Your Jenkins SSH Key ID
-        SERVER_IP = "44.202.145.120"     // Replace with your EC2 IP
-        SERVER_USER = "ubuntu"               // Change to 'ubuntu' if using Ubuntu
-        GIT_REPO = "https://github.com/LauraOkafor/static-website-example.git"
+        SSH_KEY = credentials('EC2_SSH_KEY')  // Use your Jenkins SSH key ID
+        SERVER_IP = "44.202.145.120"    // Replace with your EC2 instance IP
+        SERVER_USER = "ubuntu"                // Change if needed
         DEPLOY_DIR = "/var/www/html"
+        GIT_REPO = "https://github.com/LauraOkafor/static-website-example.git"
     }
 
     stages {
@@ -36,6 +40,7 @@ pipeline {
                 script {
                     sh """
                         scp -i ${SSH_KEY} -o StrictHostKeyChecking=no -r * ${SERVER_USER}@${SERVER_IP}:${DEPLOY_DIR}
+                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "sudo systemctl restart nginx"
                     """
                 }
             }
@@ -44,10 +49,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment Successful!"
+            echo "✅ Deployment Successful! Your website is live."
         }
         failure {
-            echo "❌ Deployment Failed!"
+            echo "❌ Deployment Failed. Check Jenkins logs."
         }
     }
 }
